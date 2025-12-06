@@ -1718,3 +1718,98 @@ func (this *DtNavMesh) GetDebugMesh() ([]float32, []int) {
 
 	return positions, indices
 }
+
+type DtPolyGroup struct {
+	Polys []DtPolyRef
+	Bmin  [3]float32
+	Bmax  [3]float32
+}
+
+func (g *DtPolyGroup) Contains(point []float32) bool {
+	return point[0] >= g.Bmin[0] && point[0] <= g.Bmax[0] &&
+		point[1] >= g.Bmin[1] && point[1] <= g.Bmax[1] &&
+		point[2] >= g.Bmin[2] && point[2] <= g.Bmax[2]
+}
+
+func (this *DtNavMesh) GetPolyGroupsByArea(area uint8) []*DtPolyGroup {
+	var visited = make(map[DtPolyRef]bool)
+	var result []*DtPolyGroup
+
+	// Iterate over all tiles
+	for i := 0; i < int(this.m_maxTiles); i++ {
+		tile := &this.m_tiles[i]
+		if tile.Header == nil {
+			continue
+		}
+
+		// Iterate over all polygons in the tile
+		for j := 0; j < int(tile.Header.PolyCount); j++ {
+			ref := this.EncodePolyId(tile.Salt, uint32(i), uint32(j))
+			if visited[ref] {
+				continue
+			}
+
+			poly := &tile.Polys[j]
+			// Only consider polygons with the specified area
+			if poly.GetArea() != area {
+				continue
+			}
+
+			// Found a new group
+			group := &DtPolyGroup{
+				Bmin: [3]float32{math.MaxFloat32, math.MaxFloat32, math.MaxFloat32},
+				Bmax: [3]float32{-math.MaxFloat32, -math.MaxFloat32, -math.MaxFloat32},
+			}
+
+			// BFS to find all connected polygons with the same area
+			var queue []DtPolyRef
+			queue = append(queue, ref)
+			visited[ref] = true
+
+			for len(queue) > 0 {
+				currRef := queue[0]
+				queue = queue[1:]
+
+				group.Polys = append(group.Polys, currRef)
+
+				var currTile *DtMeshTile
+				var currPoly *DtPoly
+				this.GetTileAndPolyByRefUnsafe(currRef, &currTile, &currPoly)
+
+				// Update group bounds
+				for k := 0; k < int(currPoly.VertCount); k++ {
+					vIdx := currPoly.Verts[k]
+					v := currTile.Verts[vIdx*3 : vIdx*3+3]
+					DtVmin(group.Bmin[:], v)
+					DtVmax(group.Bmax[:], v)
+				}
+
+				// Check neighbors
+				for k := currPoly.FirstLink; k != DT_NULL_LINK; k = currTile.Links[k].Next {
+					link := &currTile.Links[k]
+					neighborRef := link.Ref
+					if neighborRef == 0 {
+						continue
+					}
+
+					if visited[neighborRef] {
+						continue
+					}
+
+					var neighborTile *DtMeshTile
+					var neighborPoly *DtPoly
+					this.GetTileAndPolyByRefUnsafe(neighborRef, &neighborTile, &neighborPoly)
+
+					if neighborPoly.GetArea() == area {
+						visited[neighborRef] = true
+						queue = append(queue, neighborRef)
+					}
+				}
+			}
+
+			result = append(result, group)
+		}
+	}
+
+	return result
+}
