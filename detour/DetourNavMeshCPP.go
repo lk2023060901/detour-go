@@ -1779,7 +1779,7 @@ func (this *DtNavMesh) GetPolyGroupsByArea(area uint8) []*DtPolyGroup {
 				// Update group bounds
 				for k := 0; k < int(currPoly.VertCount); k++ {
 					vIdx := currPoly.Verts[k]
-					v := currTile.Verts[vIdx*3 : vIdx*3+3]
+					v := currTile.Verts[vIdx*3:]
 					DtVmin(group.Bmin[:], v)
 					DtVmax(group.Bmax[:], v)
 				}
