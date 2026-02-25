@@ -19,7 +19,7 @@
 package dtcrowd
 
 import (
-	detour "github.com/o0olele/detour-go/detour"
+	detour "github.com/lk2023060901/detour-go/detour"
 )
 
 const MAX_ITERS_PER_UPDATE = 100

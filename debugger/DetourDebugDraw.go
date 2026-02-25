@@ -1,6 +1,6 @@
 package debugger
 
-import detour "github.com/o0olele/detour-go/detour"
+import detour "github.com/lk2023060901/detour-go/detour"
 
 type DrawNavMeshFlags int
 

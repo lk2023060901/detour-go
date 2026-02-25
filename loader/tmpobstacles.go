@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"unsafe"
 
-	detour "github.com/o0olele/detour-go/detour"
-	"github.com/o0olele/detour-go/fastlz"
-	dtcache "github.com/o0olele/detour-go/tilecache"
+	detour "github.com/lk2023060901/detour-go/detour"
+	"github.com/lk2023060901/detour-go/fastlz"
+	dtcache "github.com/lk2023060901/detour-go/tilecache"
 )
 
 const TILECACHESET_MAGIC = 'T'<<24 | 'S'<<16 | 'E'<<8 | 'T' //'TSET';

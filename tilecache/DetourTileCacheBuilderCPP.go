@@ -19,10 +19,11 @@
 package dtcache
 
 import (
+	"encoding/binary"
 	"reflect"
 	"unsafe"
 
-	detour "github.com/o0olele/detour-go/detour"
+	detour "github.com/lk2023060901/detour-go/detour"
 )
 
 var offsetX = [4]int32{-1, 0, 1, 0}
@@ -2085,6 +2086,22 @@ func DtFreeTileCacheLayer(layer *DtTileCacheLayer) {
 func DtDecompressTileCacheLayer(comp DtTileCacheCompressor,
 	compressed []uint8, compressedSize int32,
 	layerOut **DtTileCacheLayer) detour.DtStatus {
+	return DtDecompressTileCacheLayerWithLayout(
+		comp,
+		compressed,
+		compressedSize,
+		DT_TILECACHE_LAYER_LAYOUT_CLASSIC,
+		layerOut,
+	)
+}
+
+func DtDecompressTileCacheLayerWithLayout(
+	comp DtTileCacheCompressor,
+	compressed []uint8,
+	compressedSize int32,
+	layout DtTileCacheLayerLayout,
+	layerOut **DtTileCacheLayer,
+) detour.DtStatus {
 
 	detour.DtAssert(comp != nil)
 
@@ -2092,6 +2109,9 @@ func DtDecompressTileCacheLayer(comp DtTileCacheCompressor,
 		return detour.DT_FAILURE | detour.DT_INVALID_PARAM
 	}
 	if compressed == nil {
+		return detour.DT_FAILURE | detour.DT_INVALID_PARAM
+	}
+	if len(compressed) < int(DtTileCacheLayerHeaderSize) || compressedSize < int32(DtTileCacheLayerHeaderSize) {
 		return detour.DT_FAILURE | detour.DT_INVALID_PARAM
 	}
 
@@ -2129,12 +2149,33 @@ func DtDecompressTileCacheLayer(comp DtTileCacheCompressor,
 	*header = *compressedHeader
 	// Decompress grid.
 	var size int32
-	status := comp.Decompress(compressed[headerSize:], compressedSize-headerSize, grids, gridsSize, &size)
+	decompressed := grids
+	decompressedSize := gridsSize
+	if layout == DT_TILECACHE_LAYER_LAYOUT_UE_16BIT_HEIGHTS {
+		decompressed = make([]byte, gridSize*4)
+		decompressedSize = int32(len(decompressed))
+	}
+	status := comp.Decompress(
+		compressed[headerSize:],
+		compressedSize-headerSize,
+		decompressed,
+		decompressedSize,
+		&size,
+	)
 	detour.DtIgnoreUnused(size)
 
 	if detour.DtStatusFailed(status) {
 		buffer = nil
 		return status
+	}
+	if layout == DT_TILECACHE_LAYER_LAYOUT_UE_16BIT_HEIGHTS {
+		if int32(len(decompressed)) < gridSize*4 {
+			return detour.DT_FAILURE | detour.DT_INVALID_PARAM
+		}
+		status = convertUELayoutToClassicGrids(decompressed, grids, gridSize)
+		if detour.DtStatusFailed(status) {
+			return status
+		}
 	}
 
 	layer.Header = header
@@ -2145,6 +2186,40 @@ func DtDecompressTileCacheLayer(comp DtTileCacheCompressor,
 
 	*layerOut = layer
 
+	return detour.DT_SUCCESS
+}
+
+func convertUELayoutToClassicGrids(ueRaw, outClassic []byte, gridSize int32) detour.DtStatus {
+	if gridSize <= 0 {
+		return detour.DT_FAILURE | detour.DT_INVALID_PARAM
+	}
+	gs := int(gridSize)
+	if len(ueRaw) < gs*4 || len(outClassic) < gs*4 {
+		return detour.DT_FAILURE | detour.DT_INVALID_PARAM
+	}
+
+	ueHeights16 := ueRaw[:gs*2]
+	ueAreas := ueRaw[gs*2 : gs*3]
+	ueCons := ueRaw[gs*3 : gs*4]
+
+	classicHeights := outClassic[:gs]
+	classicAreas := outClassic[gs : gs*2]
+	classicCons := outClassic[gs*2 : gs*3]
+	classicRegs := outClassic[gs*3 : gs*4]
+
+	for i := 0; i < gs; i++ {
+		h := binary.LittleEndian.Uint16(ueHeights16[i*2 : i*2+2])
+		if h > 0xff {
+			classicHeights[i] = 0xff
+			continue
+		}
+		classicHeights[i] = uint8(h)
+	}
+	copy(classicAreas, ueAreas)
+	copy(classicCons, ueCons)
+	for i := range classicRegs {
+		classicRegs[i] = 0
+	}
 	return detour.DT_SUCCESS
 }
 

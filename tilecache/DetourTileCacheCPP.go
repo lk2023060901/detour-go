@@ -4,7 +4,7 @@ import (
 	"math"
 	"unsafe"
 
-	detour "github.com/o0olele/detour-go/detour"
+	detour "github.com/lk2023060901/detour-go/detour"
 )
 
 const (
@@ -84,6 +84,7 @@ func (this *DtTileCache) Init(params *DtTileCacheParams,
 	tmproc DtTileCacheMeshProcess) detour.DtStatus {
 	this.m_tcomp = tcomp
 	this.m_tmproc = tmproc
+	this.m_layerLayout = DT_TILECACHE_LAYER_LAYOUT_CLASSIC
 	this.m_nreqs = 0
 	this.m_params = *params
 
@@ -635,7 +636,13 @@ func (this *DtTileCache) BuildNavMeshTile(ref DtCompressedTileRef, navmesh *deto
 	var status detour.DtStatus
 
 	// Decompress tile layer data.
-	status = DtDecompressTileCacheLayer(this.m_tcomp, tile.Data, tile.DataSize, &bc.layer)
+	status = DtDecompressTileCacheLayerWithLayout(
+		this.m_tcomp,
+		tile.Data,
+		tile.DataSize,
+		this.m_layerLayout,
+		&bc.layer,
+	)
 	if detour.DtStatusFailed(status) {
 		return status
 	}

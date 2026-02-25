@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	dtcrowd "github.com/o0olele/detour-go/crowd"
-	detour "github.com/o0olele/detour-go/detour"
-	"github.com/o0olele/detour-go/loader"
+	dtcrowd "github.com/lk2023060901/detour-go/crowd"
+	detour "github.com/lk2023060901/detour-go/detour"
+	"github.com/lk2023060901/detour-go/loader"
 )
 
 func main() {

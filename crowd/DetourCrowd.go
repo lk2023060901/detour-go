@@ -2,7 +2,7 @@
 // steering and dynamic avoidance features
 package dtcrowd
 
-import detour "github.com/o0olele/detour-go/detour"
+import detour "github.com/lk2023060901/detour-go/detour"
 
 // The maximum number of neighbors that a crowd agent can take into account
 // for steering decisions.

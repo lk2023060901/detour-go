@@ -3,10 +3,10 @@ package debugger
 import (
 	"errors"
 
-	dtcrowd "github.com/o0olele/detour-go/crowd"
-	detour "github.com/o0olele/detour-go/detour"
-	"github.com/o0olele/detour-go/loader"
-	dtcache "github.com/o0olele/detour-go/tilecache"
+	dtcrowd "github.com/lk2023060901/detour-go/crowd"
+	detour "github.com/lk2023060901/detour-go/detour"
+	"github.com/lk2023060901/detour-go/loader"
+	dtcache "github.com/lk2023060901/detour-go/tilecache"
 )
 
 func GetNavMeshPrimitives(navmesh *detour.DtNavMesh) []*DebugDrawerPrimitive {

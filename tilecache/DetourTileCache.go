@@ -1,12 +1,22 @@
 package dtcache
 
 import (
-	detour "github.com/o0olele/detour-go/detour"
+	detour "github.com/lk2023060901/detour-go/detour"
 )
 
 type DtObstacleRef uint32
 
 type DtCompressedTileRef uint32
+
+type DtTileCacheLayerLayout uint8
+
+const (
+	// DT_TILECACHE_LAYER_LAYOUT_CLASSIC is the original recastnavigation tilecache layout.
+	DT_TILECACHE_LAYER_LAYOUT_CLASSIC DtTileCacheLayerLayout = iota
+	// DT_TILECACHE_LAYER_LAYOUT_UE_16BIT_HEIGHTS matches UE's tilecache layer payload layout:
+	// heights(uint16)*N + areas(uint8)*N + cons(uint8)*N.
+	DT_TILECACHE_LAYER_LAYOUT_UE_16BIT_HEIGHTS
+)
 
 // / Flags for AddTile
 const (
@@ -128,6 +138,8 @@ type DtTileCache struct {
 
 	m_update  [MAX_UPDATE]DtCompressedTileRef
 	m_nupdate int32
+
+	m_layerLayout DtTileCacheLayerLayout
 }
 
 func (this *DtTileCache) GetCompressor() DtTileCacheCompressor   { return this.m_tcomp }
@@ -136,6 +148,10 @@ func (this *DtTileCache) GetTileCount() int                      { return int(th
 func (this *DtTileCache) GetTile(i int) *DtCompressedTile        { return &this.m_tiles[i] }
 func (this *DtTileCache) GetObstacleCount() int                  { return int(this.m_params.MaxObstacles) }
 func (this *DtTileCache) GetObstacle(i int) *DtTileCacheObstacle { return &this.m_obstacles[i] }
+func (this *DtTileCache) GetLayerLayout() DtTileCacheLayerLayout { return this.m_layerLayout }
+func (this *DtTileCache) SetLayerLayout(layout DtTileCacheLayerLayout) {
+	this.m_layerLayout = layout
+}
 
 // / Encodes a tile id.
 func (this *DtTileCache) EncodeTileId(salt, it uint32) DtCompressedTileRef {

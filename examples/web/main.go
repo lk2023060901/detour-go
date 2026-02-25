@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/o0olele/detour-go/debugger"
+	"github.com/lk2023060901/detour-go/debugger"
 )
 
 // CORS middleware

@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/o0olele/detour-go/detour"
-	"github.com/o0olele/detour-go/loader"
+	"github.com/lk2023060901/detour-go/detour"
+	"github.com/lk2023060901/detour-go/loader"
 )
 
 func main() {

@@ -6,7 +6,7 @@
 ## Installation
 - install by go get
   ~~~shell
-    go get github.com/o0olele/detour-go
+    go get github.com/lk2023060901/detour-go
   ~~~
 
 ## Usages
@@ -57,7 +57,6 @@
 - using web interface to view and debug navmesh
 
     ![debugger](./examples/assets/debugger.png)
-    you can also try [workbench-go](https://github.com/o0olele/workbench-go) to view and debug navmesh.
 
 - usage
 
